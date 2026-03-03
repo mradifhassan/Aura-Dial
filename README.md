@@ -1,4 +1,4 @@
-# Aura Dial 🌌
+# Aura Dial
 
 A minimalist, modern speed dial startup page inspired by Opera, built for Firefox users on Ubuntu. Aura Dial provides a clean, high-performance command center for your web browsing, featuring customizable groups and high-quality favicons.
 
