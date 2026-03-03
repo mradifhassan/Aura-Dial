@@ -4,7 +4,7 @@ A minimalist, modern speed dial startup page inspired by Opera, built for Firefo
 
 ![Aura Dial Preview](https://picsum.photos/seed/auradial/1200/600)
 
-## ✨ Features
+## Features
 
 - **Speed Dials**: Add your favorite sites with high-quality icons fetched automatically.
 - **Group Management**: Organize your workspace into custom groups (e.g., Work, Social, Dev).
@@ -13,7 +13,7 @@ A minimalist, modern speed dial startup page inspired by Opera, built for Firefo
 - **Local Persistence**: Powered by SQLite to ensure your data stays on your machine.
 - **System Integration**: Designed to run as a background service on Ubuntu.
 
-## 🚀 Installation (Ubuntu)
+## Installation (Ubuntu)
 
 ### 1. Prerequisites
 Aura Dial requires **Node.js 20 or higher**. If you are on an older version, upgrade using `nvm`:
@@ -78,12 +78,12 @@ To make Aura Dial start automatically when you boot your computer:
    sudo systemctl start auradial
    ```
 
-## 🦊 Firefox Configuration
+##  Firefox Configuration
 
 1. **Homepage**: Go to `Settings > Home > Homepage and new windows` -> Select **Custom URLs** and enter `http://localhost:3000`.
 2. **New Tab**: Install the [New Tab Override](https://addons.mozilla.org/en-US/firefox/addon/new-tab-override/) extension and set the URL to `http://localhost:3000`.
 
-## 🔍 Troubleshooting
+##  Troubleshooting
 
 ### `ERR_INVALID_URL_SCHEME` or `EBADENGINE`
 This happens if you are using a Node.js version older than 20. Ensure you have upgraded to Node 22 using the `nvm` steps above.
