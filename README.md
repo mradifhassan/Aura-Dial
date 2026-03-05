@@ -28,7 +28,7 @@ nvm use 22
 ### 2. Setup Project
 ```bash
 # Clone or download the repository
-git clone https://github.com/yourusername/aura-dial.git
+git clone https://github.com/mradifhassan/aura-dial.git
 cd aura-dial
 
 # Install dependencies
