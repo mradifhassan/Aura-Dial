@@ -1,99 +1,140 @@
-# Aura Dial
+# Aura Dial 🌌
 
-A minimalist, modern speed dial startup page inspired by Opera, built for Firefox users on Ubuntu. Aura Dial provides a clean, high-performance command center for your web browsing, featuring customizable groups and high-quality favicons.
+A minimalist, high-performance speed dial startup page inspired by Opera, built for power users. Aura Dial provides a clean, atmospheric command center for your web browsing, featuring customizable groups, drag-and-drop reordering, and instant local performance.
 
 ![Aura Dial Preview](https://picsum.photos/seed/auradial/1200/600)
 
-## Features
+## ✨ Features
 
-- **Speed Dials**: Add your favorite sites with high-quality icons fetched automatically.
-- **Group Management**: Organize your workspace into custom groups (e.g., Work, Social, Dev).
-- **Minimalist UI**: Modern dark theme with ambient glow, smooth animations, and a real-time clock.
-- **Integrated Search**: Quick access to Google search directly from the dashboard.
-- **Local Persistence**: Powered by SQLite to ensure your data stays on your machine.
-- **System Integration**: Designed to run as a background service on Ubuntu.
+- **Atmospheric Aura**: Deep black theme with ambient glows and a subtle noise texture for a premium feel.
+- **Drag & Drop**: Effortlessly reorder your dials with smooth, physics-based animations.
+- **Group Management**: Organize sites into categories (Work, Social, Dev, etc.).
+- **Instant Favicons**: High-quality icons fetched automatically for every site.
+- **Zero-Latency Search**: Integrated Google search bar.
+- **Local First**: Your data stays on your machine in a local SQLite database.
 
-## Installation (Ubuntu)
+---
 
-### 1. Prerequisites
-Aura Dial requires **Node.js 20 or higher**. If you are on an older version, upgrade using `nvm`:
+## 🚀 Prerequisites
 
+Aura Dial requires **Node.js 20 or higher**. Using an older version (like v18) will cause errors during startup.
+
+**Check your version:**
 ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
-nvm install 22
-nvm use 22
+node -v
 ```
 
-### 2. Setup Project
-```bash
-# Clone or download the repository
-git clone https://github.com/mradifhassan/aura-dial.git
-cd aura-dial
+---
 
-# Install dependencies
-npm install
-```
+## 📥 Installation (All Platforms)
 
-### 3. Run Manually
-To test if everything is working:
-```bash
-npm run dev
-```
-Access the dashboard at `http://localhost:3000`.
+1. **Download the code** and extract it to a folder (e.g., `~/aura-dial`).
+2. **Open your terminal** in that folder.
+3. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## 🛠 Permanent Setup (systemd)
+---
 
-To make Aura Dial start automatically when you boot your computer:
+## ⚙️ Platform-Specific Setup
 
-1. **Create the service file**:
+### 🐧 Linux (Ubuntu/Debian) - Recommended
+To make Aura Dial a permanent background service:
+
+1. **Install NVM and Node 22**:
+   ```bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+   source ~/.bashrc
+   nvm install 22 && nvm use 22
+   ```
+2. **Create a System Service**:
    ```bash
    sudo nano /etc/systemd/system/auradial.service
    ```
-
-2. **Paste the configuration** (Replace `radif` with your username and verify the `npm` path using `which npm`):
+3. **Paste this config** (Replace `yourusername` and verify the `npm` path with `which npm`):
    ```ini
    [Unit]
-   Description=Aura Dial Speed Dial Page
+   Description=Aura Dial Service
    After=network.target
 
    [Service]
    Type=simple
-   User=radif
-   Group=radif
-   WorkingDirectory=/home/radif/aura-dial
-   ExecStart=/home/radif/.nvm/versions/node/v22.22.0/bin/npm run dev
+   User=yourusername
+   WorkingDirectory=/home/yourusername/aura-dial
+   ExecStart=/home/yourusername/.nvm/versions/node/v22.22.1/bin/npm run dev
    Restart=on-failure
    Environment=NODE_ENV=production
-   Environment=PATH=/home/radif/.nvm/versions/node/v22.22.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+   Environment=PATH=/home/yourusername/.nvm/versions/node/v22.22.1/bin:/usr/local/bin:/usr/bin:/bin
 
    [Install]
    WantedBy=multi-user.target
    ```
-
-3. **Enable and Start**:
+4. **Enable & Start**:
    ```bash
    sudo systemctl daemon-reload
    sudo systemctl enable auradial
    sudo systemctl start auradial
    ```
 
-##  Firefox Configuration
+### 🪟 Windows
+1. **Install Node.js**: Download the latest LTS version from [nodejs.org](https://nodejs.org/).
+2. **Run the app**:
+   ```powershell
+   npm run dev
+   ```
+3. **Auto-start**: Press `Win + R`, type `shell:startup`, and create a shortcut to a `.bat` file that runs `npm run dev` in your project folder.
 
-1. **Homepage**: Go to `Settings > Home > Homepage and new windows` -> Select **Custom URLs** and enter `http://localhost:3000`.
-2. **New Tab**: Install the [New Tab Override](https://addons.mozilla.org/en-US/firefox/addon/new-tab-override/) extension and set the URL to `http://localhost:3000`.
-
-##  Troubleshooting
-
-### `ERR_INVALID_URL_SCHEME` or `EBADENGINE`
-This happens if you are using a Node.js version older than 20. Ensure you have upgraded to Node 22 using the `nvm` steps above.
-
-### `status=203/EXEC` in systemd
-This usually means the path to `npm` in your `ExecStart` is incorrect. Run `which npm` in your terminal and ensure the path in `auradial.service` matches exactly.
-
-### Deletion not working
-If you are running this in a restricted environment (like an iframe), browser `confirm()` dialogs might be blocked. The local version has been optimized to handle deletions smoothly.
+### 🍎 macOS
+1. **Install Node.js**: Use Homebrew (`brew install node`) or NVM.
+2. **Run the app**:
+   ```bash
+   npm run dev
+   ```
+3. **Auto-start**: Use **Automator** to create an "Application" that runs the shell script `cd ~/aura-dial && npm run dev`, then add that application to your **Login Items** in System Settings.
 
 ---
 
-Built with ❤️ for the Ubuntu Community.
+## 🦊 Browser Configuration (Firefox)
+
+1. **Homepage**: Go to `Settings > Home`. Set **Homepage and new windows** to **Custom URLs** and enter `http://localhost:3000`.
+2. **New Tab Page**: Firefox doesn't allow custom URLs for new tabs by default. Install the [New Tab Override](https://addons.mozilla.org/en-US/firefox/addon/new-tab-override/) extension and set its URL to `http://localhost:3000`.
+
+---
+
+## 🔍 Ultimate Troubleshooting Guide
+
+### 1. `TypeError [ERR_INVALID_URL_SCHEME]`
+- **Cause**: You are using Node.js v18 or older.
+- **Solution**: Upgrade to Node.js 20 or 22. On Linux/Mac, use `nvm install 22`. On Windows, download the latest installer.
+
+### 2. `failed to load config from vite.config.ts`
+- **Cause**: Node version mismatch or corrupted `node_modules`.
+- **Solution**: 
+  ```bash
+  rm -rf node_modules package-lock.json
+  npm install
+  ```
+
+### 3. `status=203/EXEC` or `status=217/USER` (Linux)
+- **Cause**: The `auradial.service` file has an incorrect path to `npm` or an incorrect username.
+- **Solution**: Run `which npm` and `whoami`. Ensure these values match exactly in your `/etc/systemd/system/auradial.service` file.
+
+### 4. App starts but exits silently
+- **Cause**: The database driver (`better-sqlite3`) was compiled for a different Node version.
+- **Solution**:
+  ```bash
+  npm rebuild better-sqlite3
+  ```
+
+### 5. "Unable to connect" in Firefox
+- **Cause**: The server isn't running.
+- **Solution**: Run `npm run dev` manually to check for errors. If using Linux, check the service status with `sudo systemctl status auradial`.
+
+### 6. White flash during loading
+- **Cause**: Browser rendering the default background before the CSS loads.
+- **Solution**: (Already fixed in Aura Dial v1.1) We moved background styles to the root HTML to ensure an instant dark-mode experience.
+
+---
+
+Built with ❤️ for the global community.
