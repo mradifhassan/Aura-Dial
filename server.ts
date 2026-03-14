@@ -37,43 +37,88 @@ async function startServer() {
 
   // API Routes
   app.get("/api/state", (req, res) => {
-    const groups = db.prepare('SELECT * FROM groups ORDER BY "order" ASC').all();
-    const dials = db.prepare('SELECT * FROM dials ORDER BY "order" ASC').all();
-    
-    // Map snake_case to camelCase
-    const formattedDials = dials.map((d: any) => ({
-      id: d.id,
-      url: d.url,
-      title: d.title,
-      groupId: d.group_id,
-      order: d.order
-    }));
+    try {
+      const groups = db.prepare('SELECT * FROM groups ORDER BY "order" ASC').all();
+      const dials = db.prepare('SELECT * FROM dials ORDER BY "order" ASC').all();
+      
+      // Map snake_case to camelCase
+      const formattedDials = dials.map((d: any) => ({
+        id: d.id,
+        url: d.url,
+        title: d.title,
+        groupId: d.group_id,
+        order: d.order
+      }));
 
-    res.json({ groups, dials: formattedDials });
+      res.json({ groups, dials: formattedDials });
+    } catch (err) {
+      console.error("Error fetching state:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   app.post("/api/groups", (req, res) => {
-    const { name, order } = req.body;
-    const id = uuidv4();
-    db.prepare('INSERT INTO groups (id, name, "order") VALUES (?, ?, ?)').run(id, name, order);
-    res.json({ id, name, order });
+    try {
+      const { name, order } = req.body;
+      if (!name) return res.status(400).json({ error: "Name is required" });
+      
+      const id = uuidv4();
+      db.prepare('INSERT INTO groups (id, name, "order") VALUES (?, ?, ?)').run(id, name, order || 0);
+      res.json({ id, name, order });
+    } catch (err) {
+      console.error("Error creating group:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   app.delete("/api/groups/:id", (req, res) => {
-    db.prepare('DELETE FROM groups WHERE id = ?').run(req.params.id);
-    res.json({ success: true });
+    try {
+      db.prepare('DELETE FROM groups WHERE id = ?').run(req.params.id);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error deleting group:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   app.post("/api/dials", (req, res) => {
-    const { url, title, groupId, order } = req.body;
-    const id = uuidv4();
-    db.prepare('INSERT INTO dials (id, url, title, group_id, "order") VALUES (?, ?, ?, ?, ?)').run(id, url, title, groupId || null, order);
-    res.json({ id, url, title, groupId, order });
+    try {
+      const { url, title, groupId, order } = req.body;
+      if (!url || !title) return res.status(400).json({ error: "URL and Title are required" });
+      
+      const id = uuidv4();
+      db.prepare('INSERT INTO dials (id, url, title, group_id, "order") VALUES (?, ?, ?, ?, ?)').run(id, url, title, groupId || null, order || 0);
+      res.json({ id, url, title, groupId, order });
+    } catch (err) {
+      console.error("Error creating dial:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   app.delete("/api/dials/:id", (req, res) => {
     db.prepare('DELETE FROM dials WHERE id = ?').run(req.params.id);
     res.json({ success: true });
+  });
+
+  app.patch("/api/dials/reorder", (req, res) => {
+    try {
+      const { dialIds } = req.body; // Array of IDs in the new order
+      if (!Array.isArray(dialIds)) return res.status(400).json({ error: "dialIds must be an array" });
+
+      const updateStmt = db.prepare('UPDATE dials SET "order" = ? WHERE id = ?');
+      
+      const transaction = db.transaction((ids) => {
+        for (let i = 0; i < ids.length; i++) {
+          updateStmt.run(i, ids[i]);
+        }
+      });
+
+      transaction(dialIds);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Error reordering dials:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   app.patch("/api/dials/:id", (req, res) => {

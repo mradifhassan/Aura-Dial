@@ -17,9 +17,10 @@ import {
   Settings,
   Grid,
   Layout,
-  Clock
+  Clock,
+  GripVertical
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
 import { Dial, Group } from './types';
 
 const FAVICON_SERVICE = "https://www.google.com/s2/favicons?domain=";
@@ -43,6 +44,11 @@ export default function App() {
   useEffect(() => {
     fetchState();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    
+    // Add loaded class to root to trigger fade-in
+    const root = document.getElementById('root');
+    if (root) root.classList.add('loaded');
+    
     return () => clearInterval(timer);
   }, []);
 
@@ -59,8 +65,21 @@ export default function App() {
 
   const handleAddDial = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url = newDialUrl.startsWith('http') ? newDialUrl : `https://${newDialUrl}`;
-    const title = newDialTitle || new URL(url).hostname;
+    let url = newDialUrl.trim();
+    if (!url) return;
+    
+    if (!url.startsWith('http')) {
+      url = `https://${url}`;
+    }
+    
+    let title = newDialTitle.trim();
+    if (!title) {
+      try {
+        title = new URL(url).hostname;
+      } catch (err) {
+        title = url;
+      }
+    }
     
     try {
       const res = await fetch('/api/dials', {
@@ -73,15 +92,20 @@ export default function App() {
           order: dials.length
         })
       });
+      
       if (res.ok) {
-        fetchState();
+        await fetchState();
         setIsAddModalOpen(false);
         setNewDialUrl('');
         setNewDialTitle('');
         setSelectedGroupId('');
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to add dial: ${errorData.error || res.statusText}`);
       }
     } catch (err) {
       console.error("Failed to add dial", err);
+      alert("Network error while adding dial. Please check if the server is running.");
     }
   };
 
@@ -96,22 +120,30 @@ export default function App() {
 
   const handleAddGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    const name = newGroupName.trim();
+    if (!name) return;
+
     try {
       const res = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newGroupName,
+          name,
           order: groups.length
         })
       });
+      
       if (res.ok) {
-        fetchState();
+        await fetchState();
         setIsGroupModalOpen(false);
         setNewGroupName('');
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to add group: ${errorData.error || res.statusText}`);
       }
     } catch (err) {
       console.error("Failed to add group", err);
+      alert("Network error while adding group. Please check if the server is running.");
     }
   };
 
@@ -121,6 +153,27 @@ export default function App() {
       fetchState();
     } catch (err) {
       console.error("Failed to delete group", err);
+    }
+  };
+
+  const handleReorder = async (groupId: string | null, newDials: Dial[]) => {
+    // Update local state immediately for responsiveness
+    setDials(prev => {
+      const filtered = prev.filter(d => (d.groupId || null) !== groupId);
+      // Update the order property of the new dials based on their new position
+      const reordered = newDials.map((d, i) => ({ ...d, order: i }));
+      return [...filtered, ...reordered].sort((a, b) => a.order - b.order);
+    });
+
+    // Sync with server
+    try {
+      await fetch('/api/dials/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dialIds: newDials.map(d => d.id) })
+      });
+    } catch (err) {
+      console.error("Failed to sync reorder", err);
     }
   };
 
@@ -145,18 +198,12 @@ export default function App() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery) {
-      window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+      window.open(`https://www.duckduckgo.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 font-sans selection:bg-emerald-500/30">
-      {/* Background Ambient Glow */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
-      </div>
-
+    <div className="min-h-screen font-sans selection:bg-emerald-500/30">
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
         {/* Header / Clock */}
         <header className="flex flex-col items-center mb-16 space-y-4">
@@ -211,12 +258,17 @@ export default function App() {
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              <Reorder.Group 
+                axis="y" 
+                values={groupedDials[group.id] || []} 
+                onReorder={(newItems) => handleReorder(group.id, newItems)}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
+              >
                 {groupedDials[group.id]?.map(dial => (
                   <DialCard key={dial.id} dial={dial} onDelete={() => handleDeleteDial(dial.id)} />
                 ))}
                 <AddButton onClick={() => { setSelectedGroupId(group.id); setIsAddModalOpen(true); }} />
-              </div>
+              </Reorder.Group>
             </section>
           ))}
 
@@ -234,12 +286,17 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            <Reorder.Group 
+              axis="y" 
+              values={groupedDials['ungrouped'] || []} 
+              onReorder={(newItems) => handleReorder(null, newItems)}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
+            >
               {groupedDials['ungrouped']?.map(dial => (
                 <DialCard key={dial.id} dial={dial} onDelete={() => handleDeleteDial(dial.id)} />
               ))}
               <AddButton onClick={() => { setSelectedGroupId(''); setIsAddModalOpen(true); }} />
-            </div>
+            </Reorder.Group>
           </section>
         </div>
       </main>
@@ -370,18 +427,29 @@ export default function App() {
 
 const DialCard: React.FC<{ dial: Dial, onDelete: () => void | Promise<void> }> = ({ dial, onDelete }) => {
   const domain = new URL(dial.url).hostname;
+  const controls = useDragControls();
   
   return (
-    <motion.a
-      href={dial.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      layout
+    <Reorder.Item
+      value={dial}
+      id={dial.id}
+      dragListener={false}
+      dragControls={controls}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -4 }}
-      className="group relative flex flex-col items-center p-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl hover:bg-zinc-800/50 hover:border-zinc-700/50 transition-all backdrop-blur-sm cursor-pointer"
+      whileDrag={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)", zIndex: 50 }}
+      className="group relative flex flex-col items-center p-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl hover:bg-zinc-800/50 hover:border-zinc-700/50 transition-all backdrop-blur-sm"
     >
+      <div 
+        className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 cursor-grab active:cursor-grabbing"
+        onPointerDown={(e) => controls.start(e)}
+      >
+        <div className="p-1 text-zinc-600 hover:text-zinc-300">
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+      </div>
+
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 z-20">
         <button 
           onClick={(e) => { 
@@ -395,25 +463,35 @@ const DialCard: React.FC<{ dial: Dial, onDelete: () => void | Promise<void> }> =
         </button>
       </div>
 
-      <div className="w-16 h-16 mb-4 flex items-center justify-center bg-zinc-950/50 rounded-2xl p-3 shadow-inner">
-        <img 
-          src={`${FAVICON_SERVICE}${domain}&sz=128`} 
-          alt={dial.title}
-          className="w-10 h-10 object-contain drop-shadow-lg"
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${dial.title}&background=random&color=fff`;
-          }}
-        />
-      </div>
-      
-      <span className="text-sm font-medium text-zinc-400 group-hover:text-zinc-100 transition-colors text-center line-clamp-1 w-full px-2">
-        {dial.title}
-      </span>
-      <span className="text-[10px] text-zinc-600 mt-0.5 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {domain}
-      </span>
-    </motion.a>
+      <a
+        href={dial.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex flex-col items-center w-full h-full"
+        onClick={(e) => {
+          // Prevent navigation if we are dragging
+        }}
+      >
+        <div className="w-16 h-16 mb-4 flex items-center justify-center bg-zinc-950/50 rounded-2xl p-3 shadow-inner">
+          <img 
+            src={`${FAVICON_SERVICE}${domain}&sz=128`} 
+            alt={dial.title}
+            className="w-10 h-10 object-contain drop-shadow-lg"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${dial.title}&background=random&color=fff`;
+            }}
+          />
+        </div>
+        
+        <span className="text-sm font-medium text-zinc-400 group-hover:text-zinc-100 transition-colors text-center line-clamp-1 w-full px-2">
+          {dial.title}
+        </span>
+        <span className="text-[10px] text-zinc-600 mt-0.5 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {domain}
+        </span>
+      </a>
+    </Reorder.Item>
   );
 }
 
