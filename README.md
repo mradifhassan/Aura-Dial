@@ -1,10 +1,10 @@
-# Aura Dial 🌌
+# Aura Dial
 
 A minimalist, high-performance speed dial startup page inspired by Opera, built for power users. Aura Dial provides a clean, atmospheric command center for your web browsing, featuring customizable groups, drag-and-drop reordering, and instant local performance.
 
 ![Aura Dial Preview](./image/image.png)
 
-## ✨ Features
+## Features
 
 - **Atmospheric Aura**: Deep black theme with ambient glows and a subtle noise texture for a premium feel.
 - **Drag & Drop**: Effortlessly reorder your dials with smooth, physics-based animations.
@@ -15,7 +15,7 @@ A minimalist, high-performance speed dial startup page inspired by Opera, built 
 
 ---
 
-## 🚀 Prerequisites
+## Prerequisites
 
 Aura Dial requires **Node.js 20 or higher**. Using an older version (like v18) will cause errors during startup.
 
@@ -26,7 +26,7 @@ node -v
 
 ---
 
-## 📥 Installation (All Platforms)
+## Installation (All Platforms)
 
 1. **Download the code** and extract it to a folder (e.g., `~/aura-dial`).
 2. **Open your terminal** in that folder.
@@ -37,9 +37,9 @@ node -v
 
 ---
 
-## ⚙️ Platform-Specific Setup
+## Platform-Specific Setup
 
-### 🐧 Linux (Ubuntu/Debian) - Recommended
+### Linux (Ubuntu/Debian) - Recommended
 To make Aura Dial a permanent background service:
 
 1. **Install NVM and Node 22**:
@@ -77,7 +77,7 @@ To make Aura Dial a permanent background service:
    sudo systemctl start auradial
    ```
 
-### 🪟 Windows
+### Windows
 1. **Install Node.js**: Download the latest LTS version from [nodejs.org](https://nodejs.org/).
 2. **Run the app**:
    ```powershell
@@ -85,7 +85,7 @@ To make Aura Dial a permanent background service:
    ```
 3. **Auto-start**: Press `Win + R`, type `shell:startup`, and create a shortcut to a `.bat` file that runs `npm run dev` in your project folder.
 
-### 🍎 macOS
+### macOS
 1. **Install Node.js**: Use Homebrew (`brew install node`) or NVM.
 2. **Run the app**:
    ```bash
@@ -95,14 +95,14 @@ To make Aura Dial a permanent background service:
 
 ---
 
-## 🦊 Browser Configuration (Firefox)
+## Browser Configuration (Firefox)
 
 1. **Homepage**: Go to `Settings > Home`. Set **Homepage and new windows** to **Custom URLs** and enter `http://localhost:3000`.
 2. **New Tab Page**: Firefox doesn't allow custom URLs for new tabs by default. Install the [New Tab Override](https://addons.mozilla.org/en-US/firefox/addon/new-tab-override/) extension and set its URL to `http://localhost:3000`.
 
 ---
 
-## 🔍 Ultimate Troubleshooting Guide
+## Ultimate Troubleshooting Guide
 
 ### 1. `TypeError [ERR_INVALID_URL_SCHEME]`
 - **Cause**: You are using Node.js v18 or older.
@@ -137,4 +137,3 @@ To make Aura Dial a permanent background service:
 
 ---
 
-Built with ❤️ for the global community.
